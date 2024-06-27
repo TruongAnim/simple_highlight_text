@@ -52,13 +52,20 @@ class SimpleHighlightText extends StatelessWidget {
     List<TextSpan> spans = [];
     int start = 0;
 
-    RegExp regExp = RegExp(
-        keywords.map((keyword) => RegExp.escape(keyword)).join('|'),
-        caseSensitive: caseSensitive);
+    RegExp regExp = RegExp(keywords.map((keyword) => RegExp.escape(keyword)).join('|'), caseSensitive: caseSensitive);
     Iterable<RegExpMatch> matches = regExp.allMatches(text);
-    TextStyle? highlight =
-        highlightStyle?.copyWith(backgroundColor: highlightColor);
+    TextStyle? highlight = highlightStyle?.copyWith(backgroundColor: highlightColor);
     highlight ??= const TextStyle().copyWith(backgroundColor: highlightColor);
+
+    final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
+    TextStyle? effectiveTextStyle = style;
+    if (style == null || style!.inherit) {
+      effectiveTextStyle = defaultTextStyle.style.merge(style);
+    }
+    if (MediaQuery.boldTextOf(context)) {
+      effectiveTextStyle = effectiveTextStyle!.merge(const TextStyle(fontWeight: FontWeight.bold));
+    }
+
     for (RegExpMatch match in matches) {
       if (match.start > start) {
         spans.add(TextSpan(text: text.substring(start, match.start)));
@@ -79,7 +86,7 @@ class SimpleHighlightText extends StatelessWidget {
 
     return RichText(
       text: TextSpan(
-        style: style,
+        style: effectiveTextStyle,
         children: spans,
       ),
       textAlign: textAlign,
